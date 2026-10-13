@@ -96,7 +96,7 @@
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
                     </div>
                     <h3>Make It Your Own</h3>
-                    <p>Swap patterns and ideas with the coven, then carve a classic grin or invent something delightfully strange.</p>
+                    <p>Sketch any face, creature, or strange little design, then bring your own lines to life.</p>
                 </div>
 
                 <div class="feature-card">
@@ -111,13 +111,13 @@
 
         <section class="container" id="carving-game">
             <div class="section-header">
-                <span class="sub-title">Choose a pattern. Light the lantern.</span>
+                <span class="sub-title">Draw your own cuts. Light the lantern.</span>
                 <h2 class="spooky-font">Pumpkin Carving</h2>
             </div>
 
             <div class="carving-game-layout">
                 <div class="carving-stage">
-                    <svg class="carving-pumpkin" id="carvingPumpkin" viewBox="0 0 440 420" role="group" aria-label="Pumpkin carving area with scrap bag">
+                    <svg class="carving-pumpkin" id="carvingPumpkin" viewBox="0 0 440 420" role="group" aria-label="Pumpkin carving area">
                         <defs>
                             <radialGradient id="pumpkinSkin" cx="45%" cy="35%" r="70%">
                                 <stop offset="0%" stop-color="#ffb24c" />
@@ -131,35 +131,37 @@
                                     <feMergeNode in="SourceGraphic" />
                                 </feMerge>
                             </filter>
+                            <clipPath id="pumpkinClip">
+                                <path d="M220 76 C157 54 79 83 59 153 C38 229 83 309 154 321 C198 330 213 315 220 307 C227 315 242 330 286 321 C357 309 402 229 381 153 C361 83 283 54 220 76 Z" />
+                            </clipPath>
                         </defs>
                         <path class="pumpkin-stem" d="M199 83 C190 62 203 39 223 31 C219 52 235 62 232 83 Z" />
                         <path class="pumpkin-body" d="M220 76 C157 54 79 83 59 153 C38 229 83 309 154 321 C198 330 213 315 220 307 C227 315 242 330 286 321 C357 309 402 229 381 153 C361 83 283 54 220 76 Z" />
                         <path class="pumpkin-lobe" d="M220 78 C180 95 177 283 220 307 C263 283 260 95 220 78 Z" />
                         <path class="pumpkin-groove" d="M117 91 C77 148 86 258 151 304" />
                         <path class="pumpkin-groove" d="M323 91 C363 148 354 258 289 304" />
-                        <g id="carvingPattern" aria-label="Carving pattern"></g>
-                        <g id="fallingPieces" aria-hidden="true" pointer-events="none"></g>
-                        <g class="carving-scrap-bag" aria-label="Mini garbage bag">
-                            <path class="scrap-bag-body" d="M355 323 Q367 320 379 312 L401 312 Q413 323 430 320 L423 374 Q393 389 363 374 Z" />
-                            <path class="scrap-bag-rim" d="M355 323 Q393 335 430 320 L428 330 Q393 345 357 333 Z" />
-                            <path class="scrap-bag-fold" d="M374 337 L379 367 M412 336 L407 367" />
-                            <text class="scrap-bag-label" x="393" y="409">SCRAPS</text>
-                            <text class="scrap-bag-count" id="scrapCount" x="393" y="385">0</text>
-                        </g>
+                        <path class="carving-surface" id="carvingSurface" d="M220 76 C157 54 79 83 59 153 C38 229 83 309 154 321 C198 330 213 315 220 307 C227 315 242 330 286 321 C357 309 402 229 381 153 C361 83 283 54 220 76 Z" />
+                        <g id="carvingPattern" clip-path="url(#pumpkinClip)" aria-label="Your custom cuts"></g>
                     </svg>
                 </div>
 
                 <div class="carving-controls">
-                    <h3>Choose a design</h3>
-                    <div class="carving-designs" role="group" aria-label="Pumpkin designs">
-                        <button class="carving-design is-selected" type="button" data-design="grin" aria-pressed="true">Classic grin</button>
-                        <button class="carving-design" type="button" data-design="cat" aria-pressed="false">Black cat</button>
-                        <button class="carving-design" type="button" data-design="moon" aria-pressed="false">Moon &amp; stars</button>
-                    </div>
-                    <p class="carving-progress" id="carvingProgress" role="status" aria-live="polite">0 of 3 cuts carved</p>
-                    <button class="btn-secondary carving-reset" id="resetCarving" type="button">
-                        <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reset design
+                    <h3>Draw your design</h3>
+                    <p class="carving-instructions">Pick up the knife, then drag across the pumpkin to carve.</p>
+                    <button class="btn-secondary carving-action carving-knife" id="toggleKnife" type="button" aria-pressed="false">
+                        <i class="fa-solid fa-utensils" aria-hidden="true"></i>
+                        <span id="knifeToggleLabel">Pick up carving knife</span>
                     </button>
+                    <p class="carving-tool-status" id="carvingToolStatus" role="status" aria-live="polite">Knife is on the table.</p>
+                    <p class="carving-progress" id="carvingProgress" role="status" aria-live="polite">0 cuts carved</p>
+                    <div class="carving-actions">
+                        <button class="btn-secondary carving-action" id="undoCarving" type="button" disabled>
+                            <i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i> Undo
+                        </button>
+                        <button class="btn-secondary carving-action" id="resetCarving" type="button">
+                            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Clear pumpkin
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>

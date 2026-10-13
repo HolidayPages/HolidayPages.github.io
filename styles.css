@@ -770,78 +770,26 @@ a.feature-card {
     stroke-linecap: round;
 }
 
-.carving-piece {
-    cursor: pointer;
-    fill: rgba(40, 19, 17, 0.32);
-    stroke: #ffe0a0;
-    stroke-width: 3;
-    stroke-dasharray: 6 5;
-    stroke-linejoin: round;
-    transition: fill 180ms ease, stroke 180ms ease, filter 180ms ease;
+.carving-surface {
+    fill: transparent;
+    pointer-events: all;
+    cursor: not-allowed;
+    touch-action: none;
+    user-select: none;
 }
 
-.carving-piece:hover,
-.carving-piece:focus-visible {
-    fill: rgba(255, 218, 113, 0.55);
-    stroke: #fff4ce;
-    outline: none;
+.carving-stage.is-knife-held .carving-surface {
+    cursor: crosshair;
 }
 
-.carving-piece.is-carved {
-    fill: #ffe37b;
-    stroke: #fff3bd;
-    stroke-dasharray: none;
-    filter: url(#cutGlow);
-}
-
-.carving-piece.is-carved:hover,
-.carving-piece.is-carved:focus-visible {
-    fill: #fff0a6;
-}
-
-.carved-fragment {
-    fill: url(#pumpkinSkin);
-    stroke: #ffd28b;
-    stroke-width: 3;
+.carving-cut {
+    fill: none;
+    stroke: #fff0a6;
+    stroke-width: 8;
+    stroke-linecap: round;
     stroke-linejoin: round;
     filter: url(#cutGlow);
     pointer-events: none;
-}
-
-.scrap-bag-body {
-    fill: #172a24;
-    stroke: #79a17b;
-    stroke-width: 4;
-    stroke-linejoin: round;
-}
-
-.scrap-bag-rim {
-    fill: #243c31;
-    stroke: #91b894;
-    stroke-width: 3;
-    stroke-linejoin: round;
-}
-
-.scrap-bag-fold {
-    fill: none;
-    stroke: rgba(173, 211, 163, 0.55);
-    stroke-width: 3;
-    stroke-linecap: round;
-}
-
-.scrap-bag-label,
-.scrap-bag-count {
-    fill: var(--text-ghost);
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    text-anchor: middle;
-}
-
-.scrap-bag-label {
-    fill: #b9d5b4;
-    font-size: 9px;
-    letter-spacing: 0;
 }
 
 .carving-controls h3 {
@@ -849,29 +797,24 @@ a.feature-card {
     font-size: 1.5rem;
 }
 
-.carving-designs {
-    display: grid;
-    gap: 10px;
+.carving-instructions {
+    color: rgba(243, 232, 255, 0.72);
 }
 
-.carving-design {
-    min-height: 48px;
-    padding: 10px 14px;
-    border: 1px solid var(--bg-card-border);
-    border-radius: var(--radius-sm);
-    background: rgba(22, 13, 34, 0.72);
-    color: var(--text-ghost);
-    text-align: left;
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition-smooth);
+.carving-knife {
+    margin-top: 16px;
 }
 
-.carving-design:hover,
-.carving-design.is-selected {
+.carving-knife.is-held {
     border-color: var(--primary-pumpkin);
-    background: rgba(249, 115, 22, 0.15);
+    background: rgba(249, 115, 22, 0.2);
+    color: #ffe0a0;
+}
+
+.carving-tool-status {
+    min-height: 1.6em;
+    margin-top: 10px;
+    color: var(--accent-green);
 }
 
 .carving-progress {
@@ -880,12 +823,22 @@ a.feature-card {
     color: var(--accent-green);
 }
 
-.carving-reset {
+.carving-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.carving-action {
     cursor: pointer;
 }
 
-.carving-design:focus-visible,
-.carving-reset:focus-visible {
+.carving-action:disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+}
+
+.carving-action:focus-visible {
     outline: 2px solid var(--accent-green);
     outline-offset: 3px;
 }

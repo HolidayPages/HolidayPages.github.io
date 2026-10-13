@@ -143,12 +143,20 @@
                         <path class="pumpkin-groove" d="M323 91 C363 148 354 258 289 304" />
                         <path class="carving-surface" id="carvingSurface" d="M220 76 C157 54 79 83 59 153 C38 229 83 309 154 321 C198 330 213 315 220 307 C227 315 242 330 286 321 C357 309 402 229 381 153 C361 83 283 54 220 76 Z" />
                         <g id="carvingPattern" clip-path="url(#pumpkinClip)" aria-label="Your custom cuts"></g>
+                        <g id="fallingPieces" aria-hidden="true" pointer-events="none"></g>
+                        <g class="carving-scrap-bag" aria-label="Scrap bag">
+                            <path class="scrap-bag-body" d="M355 342 Q367 339 379 331 L401 331 Q413 342 430 339 L423 390 Q393 405 363 390 Z" />
+                            <path class="scrap-bag-rim" d="M355 342 Q393 354 430 339 L428 350 Q393 364 357 353 Z" />
+                            <path class="scrap-bag-fold" d="M374 357 L379 384 M412 356 L407 384" />
+                            <text class="scrap-bag-label" x="393" y="415">SCRAPS</text>
+                            <text class="scrap-bag-count" id="scrapCount" x="393" y="386">0</text>
+                        </g>
                     </svg>
                 </div>
 
                 <div class="carving-controls">
                     <h3>Draw your design</h3>
-                    <p class="carving-instructions">Pick up the knife, then drag across the pumpkin to carve.</p>
+                    <p class="carving-instructions">Pick up the knife and draw a closed outline. The piece will fall into the scrap bag.</p>
                     <button class="btn-secondary carving-action carving-knife" id="toggleKnife" type="button" aria-pressed="false">
                         <i class="fa-solid fa-utensils" aria-hidden="true"></i>
                         <span id="knifeToggleLabel">Pick up carving knife</span>
@@ -160,7 +168,7 @@
                             <i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i> Undo
                         </button>
                         <button class="btn-secondary carving-action" id="resetCarving" type="button">
-                            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Clear pumpkin
+                            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reset carving
                         </button>
                     </div>
                 </div>

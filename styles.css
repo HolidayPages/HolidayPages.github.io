@@ -784,7 +784,7 @@ a.feature-card {
     fill: transparent;
     pointer-events: all;
     cursor: not-allowed;
-    touch-action: none;
+    touch-action: pan-y;
     user-select: none;
     -webkit-user-select: none;
 }

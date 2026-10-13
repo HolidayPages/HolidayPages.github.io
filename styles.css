@@ -736,12 +736,22 @@ a.feature-card {
     background: radial-gradient(ellipse at 50% 80%, rgba(249, 115, 22, 0.16), transparent 65%), rgba(8, 5, 12, 0.5);
 }
 
+.carving-stage.is-knife-held {
+    touch-action: none;
+    overscroll-behavior: contain;
+}
+
 .carving-pumpkin {
     display: block;
     width: min(100%, 440px);
     height: auto;
     aspect-ratio: 11 / 10.5;
     overflow: visible;
+}
+
+.carving-stage.is-knife-held .carving-pumpkin,
+.carving-stage.is-knife-held .carving-surface {
+    touch-action: none;
 }
 
 .pumpkin-stem {
@@ -776,6 +786,7 @@ a.feature-card {
     cursor: not-allowed;
     touch-action: none;
     user-select: none;
+    -webkit-user-select: none;
 }
 
 .carving-stage.is-knife-held .carving-surface {

@@ -39,11 +39,37 @@ function setKnifeHeld(isHeld) {
     }
 }
 
-function getPumpkinPoint(event) {
+function getPumpkinPoint(clientX, clientY) {
     const point = pumpkin.createSVGPoint();
-    point.x = event.clientX;
-    point.y = event.clientY;
+    point.x = clientX;
+    point.y = clientY;
     return point.matrixTransform(pumpkin.getScreenCTM().inverse());
+}
+
+function startStroke(inputId, inputType, clientX, clientY) {
+    if (!knifeIsHeld || activeStroke) return;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('class', 'carving-cut is-drawing');
+    carvingPattern.append(path);
+    activeStroke = {
+        inputId,
+        inputType,
+        points: [getPumpkinPoint(clientX, clientY)],
+        path
+    };
+    updateStrokePath();
+}
+
+function addStrokePoint(inputId, inputType, clientX, clientY) {
+    if (!activeStroke || activeStroke.inputId !== inputId || activeStroke.inputType !== inputType) return;
+
+    const point = getPumpkinPoint(clientX, clientY);
+    const previousPoint = activeStroke.points[activeStroke.points.length - 1];
+    if (Math.hypot(point.x - previousPoint.x, point.y - previousPoint.y) < 1.5) return;
+
+    activeStroke.points.push(point);
+    updateStrokePath();
 }
 
 function updateStrokePath() {
@@ -97,8 +123,8 @@ function animateCutout(cut) {
     pendingFragments.set(cut, { fragment, frameId });
 }
 
-function finishStroke(event, keepStroke) {
-    if (!activeStroke || activeStroke.pointerId !== event.pointerId) return;
+function finishStroke(inputId, keepStroke) {
+    if (!activeStroke || activeStroke.inputId !== inputId) return;
 
     const stroke = activeStroke;
     const strokeLength = stroke.points.reduce((length, point, index, points) => {
@@ -129,37 +155,52 @@ function finishStroke(event, keepStroke) {
 }
 
 carvingSurface.addEventListener('pointerdown', (event) => {
-    if (!knifeIsHeld || event.button !== 0 || activeStroke) return;
+    if (event.pointerType === 'touch' || !knifeIsHeld || event.button !== 0 || activeStroke) return;
 
     event.preventDefault();
     carvingSurface.setPointerCapture(event.pointerId);
-
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('class', 'carving-cut is-drawing');
-    carvingPattern.append(path);
-    activeStroke = {
-        pointerId: event.pointerId,
-        points: [getPumpkinPoint(event)],
-        path
-    };
-    updateStrokePath();
+    startStroke(event.pointerId, 'pointer', event.clientX, event.clientY);
 });
 
 knifeToggleButton.addEventListener('click', () => setKnifeHeld(!knifeIsHeld));
 
 carvingSurface.addEventListener('pointermove', (event) => {
-    if (!activeStroke || activeStroke.pointerId !== event.pointerId) return;
-
-    const point = getPumpkinPoint(event);
-    const previousPoint = activeStroke.points[activeStroke.points.length - 1];
-    if (Math.hypot(point.x - previousPoint.x, point.y - previousPoint.y) < 1.5) return;
-
-    activeStroke.points.push(point);
-    updateStrokePath();
+    if (event.pointerType === 'touch') return;
+    addStrokePoint(event.pointerId, 'pointer', event.clientX, event.clientY);
 });
 
-carvingSurface.addEventListener('pointerup', (event) => finishStroke(event, true));
-carvingSurface.addEventListener('pointercancel', (event) => finishStroke(event, false));
+carvingSurface.addEventListener('pointerup', (event) => finishStroke(event.pointerId, true));
+carvingSurface.addEventListener('pointercancel', (event) => finishStroke(event.pointerId, false));
+
+carvingSurface.addEventListener('touchstart', (event) => {
+    if (!knifeIsHeld || activeStroke) return;
+
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+
+    event.preventDefault();
+    startStroke(touch.identifier, 'touch', touch.clientX, touch.clientY);
+}, { passive: false });
+
+carvingSurface.addEventListener('touchmove', (event) => {
+    if (!activeStroke || activeStroke.inputType !== 'touch') return;
+
+    const touch = Array.from(event.changedTouches).find(({ identifier }) => identifier === activeStroke.inputId);
+    if (!touch) return;
+
+    event.preventDefault();
+    addStrokePoint(touch.identifier, 'touch', touch.clientX, touch.clientY);
+}, { passive: false });
+
+carvingSurface.addEventListener('touchend', (event) => {
+    const touch = event.changedTouches[0];
+    if (touch) finishStroke(touch.identifier, true);
+});
+
+carvingSurface.addEventListener('touchcancel', (event) => {
+    const touch = event.changedTouches[0];
+    if (touch) finishStroke(touch.identifier, false);
+});
 
 undoCarvingButton.addEventListener('click', () => {
     const lastCut = carvingPattern.lastElementChild;

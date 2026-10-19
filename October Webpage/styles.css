@@ -618,6 +618,16 @@ header.nav-hidden:focus-within {
     transition: var(--transition-smooth);
 }
 
+.brew-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.brew-actions [hidden] {
+    display: none;
+}
+
 .ingredient-add:hover:not(:disabled) {
     border-color: var(--primary-pumpkin);
     background: rgba(249, 115, 22, 0.24);
@@ -638,6 +648,17 @@ header.nav-hidden:focus-within {
     opacity: 0.55;
     cursor: not-allowed;
     transform: none;
+}
+
+body.potion-chaos .potion-floater {
+    position: relative;
+    z-index: 20;
+    will-change: translate;
+}
+
+body.potion-chaos .story-section,
+body.potion-chaos .full-bleed-hero-card {
+    overflow: visible;
 }
 
 /* Feature Cards Section */
@@ -1039,4 +1060,5 @@ footer {
     header {
         transition: none;
     }
+
 }

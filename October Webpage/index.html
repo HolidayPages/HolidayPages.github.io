@@ -189,9 +189,14 @@
                             </li>
                         </ul>
 
-                        <button class="btn-cta" id="brewButton" type="button" onclick="castSpell()" disabled>
-                            <i class="fa-solid fa-flask"></i> Brew Potion Now
-                        </button>
+                        <div class="brew-actions">
+                            <button class="btn-cta" id="brewButton" type="button" onclick="castSpell()" disabled>
+                                <i class="fa-solid fa-flask"></i> Brew Potion Now
+                            </button>
+                            <button class="btn-cta" id="drinkButton" type="button" onclick="drinkPotion()" hidden>
+                                <i class="fa-solid fa-glass-water"></i> Drink Potion
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -268,10 +273,160 @@
         const cauldronContents = document.getElementById('cauldronContents');
         const cauldronStatus = document.getElementById('cauldronStatus');
         const brewButton = document.getElementById('brewButton');
+        const drinkButton = document.getElementById('drinkButton');
         const addedIngredients = new Set();
         let isBrewing = false;
+        let potionEffectTimeout;
+        let potionAnimationFrame;
+        let potionFloaters = [];
 
-        function resetIngredients() {
+        function stopPotionChaos() {
+            cancelAnimationFrame(potionAnimationFrame);
+            potionFloaters.forEach(({ element }) => {
+                element.classList.remove('potion-floater');
+                element.style.translate = '';
+            });
+            potionFloaters = [];
+            document.body.classList.remove('potion-chaos');
+        }
+
+        function startPotionChaos() {
+            stopPotionChaos();
+
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+            function isPositionedToViewport(element) {
+                for (let ancestor = element; ancestor && ancestor !== document.body; ancestor = ancestor.parentElement) {
+                    const position = getComputedStyle(ancestor).position;
+                    if (position === 'fixed' || position === 'sticky') return true;
+                }
+                return false;
+            }
+
+            const floaterSelector = '.seasonal-badge, h1, h2, h3, h4, p, a, button, li, img, svg, .ingredient-name, .feature-card, .movie-card, .cauldron-container, .story-content, .section-header, .hero-spooky-card, .logo, .nav-toggle, .recipe-meta, .hero-actions, .footer-brand, .footer-bottom';
+            const pageWidth = Math.max(document.documentElement.scrollWidth, window.innerWidth);
+            const pageHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight);
+            const candidates = Array.from(document.querySelectorAll(floaterSelector));
+            const candidateSelector = candidates.map((element) => {
+                if (element.id) return `#${CSS.escape(element.id)}`;
+                const classes = Array.from(element.classList).map((name) => `.${CSS.escape(name)}`).join('');
+                return `${element.tagName.toLowerCase()}${classes}`;
+            });
+
+            potionFloaters = candidates
+                .filter((element) => {
+                    const bounds = element.getBoundingClientRect();
+                    const style = getComputedStyle(element);
+                    const isBrewIngredient = element.matches('.brew-ingredient-list .ingredient-name, .brew-ingredient-list .ingredient-add');
+                    const recipeContent = element.closest('.story-content')?.querySelector('.brew-ingredient-list');
+                    const parentFloater = element.parentElement?.closest(candidateSelector.join(','));
+                    const isRecipeChild = Boolean(recipeContent && parentFloater?.matches('.story-content'));
+                    const hasUnselectedFloaterParent = parentFloater && !isRecipeChild &&
+                        !(isBrewIngredient && parentFloater.matches('.brew-ingredient-list > li'));
+                    return bounds.width > 0 && bounds.height > 0 &&
+                        style.display !== 'none' && style.visibility !== 'hidden' &&
+                        style.position !== 'fixed' &&
+                        !isPositionedToViewport(element) &&
+                        !(element.matches('.story-content') && element.querySelector('.brew-ingredient-list')) &&
+                        !element.matches('.brew-ingredient-list > li') &&
+                        !hasUnselectedFloaterParent;
+                })
+                .map((element) => {
+                    const bounds = element.getBoundingClientRect();
+                    const x = bounds.left + window.scrollX;
+                    const y = bounds.top + window.scrollY;
+                    element.classList.add('potion-floater');
+                    return {
+                        element,
+                        x,
+                        y,
+                        originX: x,
+                        originY: y,
+                        width: bounds.width,
+                        height: bounds.height,
+                        velocityX: (Math.random() - 0.5) * 2.4 || 1.2,
+                        velocityY: (Math.random() - 0.5) * 2.4 || -1.2
+                    };
+                });
+
+            document.body.classList.add('potion-chaos');
+            let previousTime = 0;
+
+            function animateFloaters(time) {
+                const frameScale = previousTime ? Math.min((time - previousTime) / 16.67, 2) : 1;
+                previousTime = time;
+
+                potionFloaters.forEach((floater) => {
+                    floater.x += floater.velocityX * frameScale;
+                    floater.y += floater.velocityY * frameScale;
+
+                    if (floater.x < 0 || floater.x + floater.width > pageWidth) {
+                        floater.x = Math.max(0, Math.min(floater.x, pageWidth - floater.width));
+                        floater.velocityX *= -1;
+                    }
+                    if (floater.y < 0 || floater.y + floater.height > pageHeight) {
+                        floater.y = Math.max(0, Math.min(floater.y, pageHeight - floater.height));
+                        floater.velocityY *= -1;
+                    }
+                });
+
+                for (let collisionPass = 0; collisionPass < 3; collisionPass += 1) {
+                    for (let firstIndex = 0; firstIndex < potionFloaters.length; firstIndex += 1) {
+                        const first = potionFloaters[firstIndex];
+                        for (let secondIndex = firstIndex + 1; secondIndex < potionFloaters.length; secondIndex += 1) {
+                            const second = potionFloaters[secondIndex];
+                            const overlapX = Math.min(first.x + first.width, second.x + second.width) - Math.max(first.x, second.x);
+                            const overlapY = Math.min(first.y + first.height, second.y + second.height) - Math.max(first.y, second.y);
+                            if (overlapX <= 0 || overlapY <= 0) continue;
+
+                            const firstInverseMass = 1 / (first.width * first.height);
+                            const secondInverseMass = 1 / (second.width * second.height);
+                            const inverseMassTotal = firstInverseMass + secondInverseMass;
+
+                            if (overlapX < overlapY) {
+                                const normal = first.x + first.width / 2 < second.x + second.width / 2 ? -1 : 1;
+                                const separation = overlapX + 0.5;
+                                first.x += normal * separation * firstInverseMass / inverseMassTotal;
+                                second.x -= normal * separation * secondInverseMass / inverseMassTotal;
+                                if ((first.velocityX - second.velocityX) * normal < 0) {
+                                    [first.velocityX, second.velocityX] = [second.velocityX, first.velocityX];
+                                }
+                            } else {
+                                const normal = first.y + first.height / 2 < second.y + second.height / 2 ? -1 : 1;
+                                const separation = overlapY + 0.5;
+                                first.y += normal * separation * firstInverseMass / inverseMassTotal;
+                                second.y -= normal * separation * secondInverseMass / inverseMassTotal;
+                                if ((first.velocityY - second.velocityY) * normal < 0) {
+                                    [first.velocityY, second.velocityY] = [second.velocityY, first.velocityY];
+                                }
+                            }
+                        }
+                    }
+                }
+
+                potionFloaters.forEach((floater) => {
+                    const maxX = Math.max(0, pageWidth - floater.width);
+                    const maxY = Math.max(0, pageHeight - floater.height);
+                    if (floater.x < 0 || floater.x > maxX) {
+                        floater.x = Math.max(0, Math.min(floater.x, maxX));
+                        floater.velocityX = Math.abs(floater.velocityX) * (floater.x === maxX ? -1 : 1);
+                    }
+                    if (floater.y < 0 || floater.y > maxY) {
+                        floater.y = Math.max(0, Math.min(floater.y, maxY));
+                        floater.velocityY = Math.abs(floater.velocityY) * (floater.y === maxY ? -1 : 1);
+                    }
+                });
+
+                potionFloaters.forEach(({ element, x, y, originX, originY }) => {
+                    element.style.translate = `${x - originX}px ${y - originY}px`;
+                });
+                potionAnimationFrame = requestAnimationFrame(animateFloaters);
+            }
+
+            potionAnimationFrame = requestAnimationFrame(animateFloaters);
+        }
+
+        function resetIngredients(status) {
             addedIngredients.clear();
             cauldronContents.replaceChildren();
             ingredientButtons.forEach((button) => {
@@ -279,8 +434,19 @@
                 button.textContent = 'Add';
             });
             brewButton.disabled = true;
-            cauldronStatus.textContent = 'Potion finished. Add ingredients to brew again.';
+            drinkButton.hidden = true;
+            cauldronStatus.textContent = status;
             isBrewing = false;
+        }
+
+        function drinkPotion() {
+            if (!isBrewing || drinkButton.hidden) return;
+
+            document.getElementById('spookyToast').style.display = 'none';
+            clearTimeout(potionEffectTimeout);
+            startPotionChaos();
+            potionEffectTimeout = setTimeout(stopPotionChaos, 60_000);
+            resetIngredients('You enjoyed the potion. Add ingredients to brew another.');
         }
 
         ingredientButtons.forEach((button) => {
@@ -329,10 +495,10 @@
                     toastMessage.textContent = 'Your potion is ready to serve!';
                     toast.style.display = 'block';
                     cauldronStatus.textContent = 'Your potion is ready to serve.';
+                    drinkButton.hidden = false;
 
                     setTimeout(() => {
                         toast.style.display = 'none';
-                        resetIngredients();
                     }, 3000);
                 }, 1500);
             }, 4000);
